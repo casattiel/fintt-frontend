@@ -1,53 +1,55 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { login } from "../api";
 import { useNavigate } from "react-router-dom";
 
-const Login = () => {
+function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("https://your-backend-url.com/login", {
-        email,
-        password,
-      });
-      alert("Login successful!");
-      navigate("/dashboard");
+      const response = await login(email, password);
+      localStorage.setItem("token", response.token); // Save token
+      setMessage("Login successful!");
+      setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
-      alert("Login failed. Please check your credentials.");
+      setMessage(error.response?.data?.message || "Login failed.");
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold mb-4">Login to FINTT</h2>
-        <input
-          type="email"
-          className="block w-full mb-4 p-2 border rounded"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          className="block w-full mb-4 p-2 border rounded"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded"
-        >
-          Login
-        </button>
-      </form>
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="bg-white p-8 rounded shadow-md w-96">
+        <h2 className="text-2xl font-bold mb-6">Login</h2>
+        {message && <p className="mb-4 text-red-500">{message}</p>}
+        <form onSubmit={handleLogin}>
+          <input
+            type="email"
+            placeholder="Email"
+            className="w-full mb-4 p-2 border rounded"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full mb-4 p-2 border rounded"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded w-full hover:bg-blue-600"
+          >
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   );
-};
+}
 
 export default Login;
