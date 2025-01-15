@@ -14,29 +14,45 @@ const Trade = () => {
           ? await buyCrypto(token, crypto, amount)
           : await sellCrypto(token, crypto, amount);
       setMessage(response.message);
-    } catch (err) {
+    } catch (error) {
       setMessage("Error processing the trade. Please try again.");
     }
   };
 
   return (
-    <div className="trade-container">
-      <h2>Trade Cryptocurrency</h2>
-      <input
-        type="text"
-        placeholder="Crypto (e.g., BTC)"
-        value={crypto}
-        onChange={(e) => setCrypto(e.target.value)}
-      />
-      <input
-        type="number"
-        placeholder="Amount"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-      />
-      <button onClick={() => handleTrade("buy")}>Buy</button>
-      <button onClick={() => handleTrade("sell")}>Sell</button>
-      {message && <p>{message}</p>}
+    <div className="container mx-auto p-8">
+      <h2 className="text-2xl font-bold text-blue-600 mb-4">Trade Cryptocurrency</h2>
+      <div className="flex flex-col space-y-4">
+        <input
+          type="text"
+          placeholder="Crypto (e.g., BTC)"
+          value={crypto}
+          onChange={(e) => setCrypto(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+        />
+        <input
+          type="number"
+          placeholder="Amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+        />
+        <div className="flex space-x-4">
+          <button
+            onClick={() => handleTrade("buy")}
+            className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
+          >
+            Buy
+          </button>
+          <button
+            onClick={() => handleTrade("sell")}
+            className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600"
+          >
+            Sell
+          </button>
+        </div>
+        {message && <p className="text-center text-lg mt-4">{message}</p>}
+      </div>
     </div>
   );
 };

@@ -10,26 +10,42 @@ const Market = () => {
       try {
         const data = await getMarketData();
         setMarketData(data);
+      } catch (error) {
+        console.error("Error fetching market data:", error);
+      } finally {
         setLoading(false);
-      } catch (err) {
-        console.error("Error fetching market data:", err);
       }
     };
     fetchData();
   }, []);
 
-  if (loading) return <p>Loading market data...</p>;
+  if (loading) {
+    return <p className="text-center text-lg mt-10">Loading market data...</p>;
+  }
 
   return (
-    <div className="market-container">
-      <h2>Market Data</h2>
-      <ul>
-        {Object.entries(marketData).map(([crypto, info], index) => (
-          <li key={index}>
-            <strong>{crypto}</strong>: ${info.last_trade} (Bid: ${info.bid}, Ask: ${info.ask})
-          </li>
-        ))}
-      </ul>
+    <div className="container mx-auto p-8">
+      <h2 className="text-2xl font-bold text-blue-600 mb-4">Market</h2>
+      <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow">
+        <thead>
+          <tr>
+            <th className="px-4 py-2 text-left text-gray-600">Crypto</th>
+            <th className="px-4 py-2 text-left text-gray-600">Last Price</th>
+            <th className="px-4 py-2 text-left text-gray-600">Bid</th>
+            <th className="px-4 py-2 text-left text-gray-600">Ask</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(marketData).map(([crypto, info], index) => (
+            <tr key={index} className="hover:bg-gray-100">
+              <td className="px-4 py-2 border-t">{crypto}</td>
+              <td className="px-4 py-2 border-t">${info.last_trade}</td>
+              <td className="px-4 py-2 border-t">${info.bid}</td>
+              <td className="px-4 py-2 border-t">${info.ask}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
