@@ -1,93 +1,63 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { getMarketData, buyCrypto, sellCrypto } from "../api";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase";
 
 const Trade = () => {
-  const [cryptos, setCryptos] = useState([]);
-  const [selectedCrypto, setSelectedCrypto] = useState('');
-  const [action, setAction] = useState('Buy');
-  const [amount, setAmount] = useState(0);
-  const [price, setPrice] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [message, setMessage] = useState('');
+  const [marketData, setMarketData] = useState([]);
+  const [crypto, setCrypto] = useState("");
+  const [amount, setAmount] = useState("");
+  const [user, setUser] = useState(null);
+  const [action, setAction] = useState("buy");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const fetchCryptos = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/market`);
-        setCryptos(Object.keys(response.data));
-      } catch (err) {
-        setMessage('Failed to load cryptos. Please try again later.');
-      }
+    const fetchMarketData = async () => {
+      const data = await getMarketData();
+      setMarketData(data);
     };
-    fetchCryptos();
+    fetchMarketData();
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
   }, []);
 
   const handleTrade = async () => {
+    if (!user) {
+      setMessage("Please log in to trade.");
+      return;
+    }
+
+    const token = await user.getIdToken();
+    const data = { crypto, amount: parseFloat(amount), user_id: user.uid };
+
     try {
-      const endpoint = action === 'Buy' ? '/trade/buy' : '/trade/sell';
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}${endpoint}`, {
-        user_id: 1, // Replace with dynamic user ID
-        crypto: selectedCrypto,
-        amount: parseFloat(amount),
-      });
-      setMessage(response.data.message);
-    } catch (err) {
-      setMessage('Failed to process the trade. Please try again.');
+      const response = action === "buy" ? await buyCrypto(data, token) : await sellCrypto(data, token);
+      setMessage(response.message);
+    } catch (error) {
+      setMessage("Failed to process trade. Please try again.");
     }
   };
-
-  useEffect(() => {
-    if (selectedCrypto) {
-      const fetchPrice = async () => {
-        try {
-          const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/market`);
-          setPrice(parseFloat(response.data[selectedCrypto]?.ask || 0));
-        } catch (err) {
-          setPrice(0);
-        }
-      };
-      fetchPrice();
-    }
-  }, [selectedCrypto]);
-
-  useEffect(() => {
-    setTotal((price * amount).toFixed(2));
-  }, [price, amount]);
 
   return (
     <div>
       <h1>Trade Cryptocurrency</h1>
-      <label>
-        Action:
-        <select value={action} onChange={(e) => setAction(e.target.value)}>
-          <option value="Buy">Buy</option>
-          <option value="Sell">Sell</option>
-        </select>
-      </label>
-      <br />
-      <label>
-        Cryptocurrency:
-        <select value={selectedCrypto} onChange={(e) => setSelectedCrypto(e.target.value)}>
-          <option value="">Select a cryptocurrency</option>
-          {cryptos.map((crypto) => (
-            <option key={crypto} value={crypto}>
-              {crypto}
-            </option>
-          ))}
-        </select>
-      </label>
-      <br />
-      <label>
-        Amount:
-        <input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-        />
-      </label>
-      <p>Price: ${price.toFixed(2)}</p>
-      <p>Total: ${total}</p>
-      <button onClick={handleTrade}>{action}</button>
+      <select onChange={(e) => setAction(e.target.value)}>
+        <option value="buy">Buy</option>
+        <option value="sell">Sell</option>
+      </select>
+      <select onChange={(e) => setCrypto(e.target.value)}>
+        <option value="">Select a cryptocurrency</option>
+        {Object.entries(marketData).map(([name, info]) => (
+          <option key={info.pair} value={info.pair}>
+            {name}
+          </option>
+        ))}
+      </select>
+      <input type="number" placeholder="Amount" onChange={(e) => setAmount(e.target.value)} />
+      <button onClick={handleTrade}>{action === "buy" ? "Buy" : "Sell"}</button>
       {message && <p>{message}</p>}
     </div>
   );
