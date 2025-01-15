@@ -1,115 +1,93 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const Trade = () => {
   const [cryptos, setCryptos] = useState([]);
-  const [selectedCrypto, setSelectedCrypto] = useState("");
+  const [selectedCrypto, setSelectedCrypto] = useState('');
+  const [action, setAction] = useState('Buy');
   const [amount, setAmount] = useState(0);
   const [price, setPrice] = useState(0);
   const [total, setTotal] = useState(0);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
 
-  // Fetch supported cryptocurrencies
   useEffect(() => {
     const fetchCryptos = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/market");
-        if (Array.isArray(response.data)) {
-          setCryptos(response.data);
-        } else {
-          throw new Error("Invalid response format");
-        }
-      } catch (error) {
-        console.error("Failed to fetch cryptos:", error);
-        setCryptos([]); // Handle error gracefully
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/market`);
+        setCryptos(Object.keys(response.data));
+      } catch (err) {
+        setMessage('Failed to load cryptos. Please try again later.');
       }
     };
     fetchCryptos();
   }, []);
 
-  const handleCryptoChange = async (crypto) => {
-    setSelectedCrypto(crypto);
-    if (crypto) {
-      try {
-        const response = await axios.get(
-          `http://localhost:8000/market?crypto=${crypto}`
-        );
-        setPrice(response.data.price || 0); // Fetch real-time price
-      } catch (error) {
-        console.error("Failed to fetch crypto price:", error);
-        setPrice(0);
-      }
-    }
-  };
-
-  const handleBuy = async () => {
-    if (!selectedCrypto || amount <= 0) {
-      setMessage("Please select a crypto and enter a valid amount.");
-      return;
-    }
-
+  const handleTrade = async () => {
     try {
-      const response = await axios.post("http://localhost:8000/trade/buy", {
-        crypto: selectedCrypto,
-        amount,
+      const endpoint = action === 'Buy' ? '/trade/buy' : '/trade/sell';
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}${endpoint}`, {
         user_id: 1, // Replace with dynamic user ID
+        crypto: selectedCrypto,
+        amount: parseFloat(amount),
       });
-
-      setMessage(`Successfully purchased ${amount} ${selectedCrypto}.`);
-      setAmount(0);
-      setTotal(0);
-    } catch (error) {
-      console.error("Failed to execute trade:", error);
-      setMessage("Failed to complete the purchase. Please try again.");
+      setMessage(response.data.message);
+    } catch (err) {
+      setMessage('Failed to process the trade. Please try again.');
     }
   };
 
-  const handleAmountChange = (value) => {
-    setAmount(value);
-    setTotal((value * price).toFixed(2));
-  };
+  useEffect(() => {
+    if (selectedCrypto) {
+      const fetchPrice = async () => {
+        try {
+          const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/market`);
+          setPrice(parseFloat(response.data[selectedCrypto]?.ask || 0));
+        } catch (err) {
+          setPrice(0);
+        }
+      };
+      fetchPrice();
+    }
+  }, [selectedCrypto]);
+
+  useEffect(() => {
+    setTotal((price * amount).toFixed(2));
+  }, [price, amount]);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Trade Cryptocurrency</h2>
-      <div>
-        <label>Action:</label>
-        <select>
+    <div>
+      <h1>Trade Cryptocurrency</h1>
+      <label>
+        Action:
+        <select value={action} onChange={(e) => setAction(e.target.value)}>
           <option value="Buy">Buy</option>
-          {/* Add "Sell" if needed */}
+          <option value="Sell">Sell</option>
         </select>
-      </div>
-      <div>
-        <label>Cryptocurrency:</label>
-        <select
-          value={selectedCrypto}
-          onChange={(e) => handleCryptoChange(e.target.value)}
-        >
+      </label>
+      <br />
+      <label>
+        Cryptocurrency:
+        <select value={selectedCrypto} onChange={(e) => setSelectedCrypto(e.target.value)}>
           <option value="">Select a cryptocurrency</option>
-          {cryptos.length > 0 ? (
-            cryptos.map((crypto) => (
-              <option key={crypto} value={crypto}>
-                {crypto}
-              </option>
-            ))
-          ) : (
-            <option value="">No cryptocurrencies available</option>
-          )}
+          {cryptos.map((crypto) => (
+            <option key={crypto} value={crypto}>
+              {crypto}
+            </option>
+          ))}
         </select>
-      </div>
-      <div>
-        <label>Amount:</label>
+      </label>
+      <br />
+      <label>
+        Amount:
         <input
           type="number"
           value={amount}
-          onChange={(e) => handleAmountChange(e.target.value)}
+          onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
         />
-      </div>
-      <div>
-        <p>Price: ${price}</p>
-        <p>Total: ${total}</p>
-      </div>
-      <button onClick={handleBuy}>Buy</button>
+      </label>
+      <p>Price: ${price.toFixed(2)}</p>
+      <p>Total: ${total}</p>
+      <button onClick={handleTrade}>{action}</button>
       {message && <p>{message}</p>}
     </div>
   );

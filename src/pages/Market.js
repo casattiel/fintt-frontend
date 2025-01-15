@@ -1,59 +1,48 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
-const Wallet = () => {
-  const [wallet, setWallet] = useState(null);
-  const [error, setError] = useState("");
-  const [userId, setUserId] = useState(1); // Example user ID; replace with actual user authentication logic
-  const [walletType, setWalletType] = useState("hot");
+const Market = () => {
+  const [marketData, setMarketData] = useState([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchWallet = async () => {
+    const fetchMarketData = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:8000/wallet?user_id=${userId}&type=${walletType}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch wallet data");
-        }
-        const data = await response.json();
-        setWallet(data);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/market`);
+        setMarketData(response.data);
       } catch (err) {
-        setError(err.message);
+        setError('Failed to fetch market data. Please try again later.');
       }
     };
-    fetchWallet();
-  }, [userId, walletType]);
+    fetchMarketData();
+  }, []);
 
   return (
-    <div className="container">
-      <h2>Your Wallet</h2>
-      <div>
-        <label htmlFor="walletType">Select Wallet Type:</label>
-        <select
-          id="walletType"
-          value={walletType}
-          onChange={(e) => setWalletType(e.target.value)}
-        >
-          <option value="hot">Hot Wallet</option>
-          <option value="cold">Cold Wallet</option>
-        </select>
-      </div>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {wallet ? (
-        <div className="wallet-details">
-          <h3>Wallet Details</h3>
-          <p>
-            <strong>Balance:</strong> ${wallet.balance || 0}
-          </p>
-          <p>
-            <strong>Last Updated:</strong> {wallet.last_updated || "N/A"}
-          </p>
-        </div>
-      ) : (
-        <p>Loading wallet data...</p>
-      )}
+    <div>
+      <h1>Cryptocurrency Market</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <table>
+        <thead>
+          <tr>
+            <th>Pair</th>
+            <th>Ask</th>
+            <th>Bid</th>
+            <th>Last Trade</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.keys(marketData).map((pair) => (
+            <tr key={pair}>
+              <td>{pair}</td>
+              <td>{marketData[pair].ask}</td>
+              <td>{marketData[pair].bid}</td>
+              <td>{marketData[pair].last_trade}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
 
-export default Wallet;
+export default Market;
