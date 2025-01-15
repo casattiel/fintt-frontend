@@ -1,64 +1,57 @@
-import React, { useState, useEffect } from "react";
-import { getMarketData, buyCrypto, sellCrypto } from "../api";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebase";
+import React, { useState } from "react";
+import { buyCrypto, sellCrypto } from "../api";
 
 const Trade = () => {
-  const [marketData, setMarketData] = useState([]);
   const [crypto, setCrypto] = useState("");
-  const [amount, setAmount] = useState("");
-  const [user, setUser] = useState(null);
+  const [amount, setAmount] = useState(0);
   const [action, setAction] = useState("buy");
-  const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    const fetchMarketData = async () => {
-      const data = await getMarketData();
-      setMarketData(data);
-    };
-    fetchMarketData();
-
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleTrade = async () => {
-    if (!user) {
-      setMessage("Please log in to trade.");
+  const handleTrade = async (e) => {
+    e.preventDefault();
+    const userId = localStorage.getItem("userId"); // Retrieve user ID
+    if (!userId) {
+      alert("You must be logged in to trade.");
       return;
     }
 
-    const token = await user.getIdToken();
-    const data = { crypto, amount: parseFloat(amount), user_id: user.uid };
-
     try {
-      const response = action === "buy" ? await buyCrypto(data, token) : await sellCrypto(data, token);
-      setMessage(response.message);
+      let response;
+      if (action === "buy") {
+        response = await buyCrypto(userId, crypto, amount);
+      } else if (action === "sell") {
+        response = await sellCrypto(userId, crypto, amount);
+      }
+      console.log(`${action} successful:`, response);
+      alert(`${action.toUpperCase()} ${crypto} successful!`);
     } catch (error) {
-      setMessage("Failed to process trade. Please try again.");
+      console.error("Trade failed:", error);
+      alert("Trade failed. Please try again.");
     }
   };
 
   return (
     <div>
-      <h1>Trade Cryptocurrency</h1>
-      <select onChange={(e) => setAction(e.target.value)}>
-        <option value="buy">Buy</option>
-        <option value="sell">Sell</option>
-      </select>
-      <select onChange={(e) => setCrypto(e.target.value)}>
-        <option value="">Select a cryptocurrency</option>
-        {Object.entries(marketData).map(([name, info]) => (
-          <option key={info.pair} value={info.pair}>
-            {name}
-          </option>
-        ))}
-      </select>
-      <input type="number" placeholder="Amount" onChange={(e) => setAmount(e.target.value)} />
-      <button onClick={handleTrade}>{action === "buy" ? "Buy" : "Sell"}</button>
-      {message && <p>{message}</p>}
+      <h1>Trade</h1>
+      <form onSubmit={handleTrade}>
+        <select value={crypto} onChange={(e) => setCrypto(e.target.value)}>
+          <option value="">Select Crypto</option>
+          <option value="BTC">Bitcoin</option>
+          <option value="ETH">Ethereum</option>
+          <option value="DOGE">Dogecoin</option>
+          <option value="USDT">Tether</option>
+        </select>
+        <input
+          type="number"
+          placeholder="Amount"
+          value={amount}
+          onChange={(e) => setAmount(parseFloat(e.target.value))}
+        />
+        <select value={action} onChange={(e) => setAction(e.target.value)}>
+          <option value="buy">Buy</option>
+          <option value="sell">Sell</option>
+        </select>
+        <button type="submit">Submit Trade</button>
+      </form>
     </div>
   );
 };
