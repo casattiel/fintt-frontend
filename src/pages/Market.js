@@ -1,46 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import { getMarketData } from "../api";
 
 const Market = () => {
   const [marketData, setMarketData] = useState([]);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMarketData = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/market`);
-        setMarketData(response.data);
+        const data = await getMarketData();
+        setMarketData(data);
+        setLoading(false);
       } catch (err) {
-        setError('Failed to fetch market data. Please try again later.');
+        console.error("Error fetching market data:", err);
       }
     };
-    fetchMarketData();
+    fetchData();
   }, []);
 
+  if (loading) return <p>Loading market data...</p>;
+
   return (
-    <div>
-      <h1>Cryptocurrency Market</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <table>
-        <thead>
-          <tr>
-            <th>Pair</th>
-            <th>Ask</th>
-            <th>Bid</th>
-            <th>Last Trade</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.keys(marketData).map((pair) => (
-            <tr key={pair}>
-              <td>{pair}</td>
-              <td>{marketData[pair].ask}</td>
-              <td>{marketData[pair].bid}</td>
-              <td>{marketData[pair].last_trade}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="market-container">
+      <h2>Market Data</h2>
+      <ul>
+        {Object.entries(marketData).map(([crypto, info], index) => (
+          <li key={index}>
+            <strong>{crypto}</strong>: ${info.last_trade} (Bid: ${info.bid}, Ask: ${info.ask})
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
