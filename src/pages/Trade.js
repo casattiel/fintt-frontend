@@ -4,12 +4,10 @@ import { buyCrypto, sellCrypto } from "../api";
 function Trade() {
     const [crypto, setCrypto] = useState("");
     const [amount, setAmount] = useState("");
-    const [tradeType, setTradeType] = useState(""); // "buy" or "sell"
     const [message, setMessage] = useState(null);
     const [error, setError] = useState(null);
 
     const handleTrade = async (type) => {
-        setTradeType(type); // Fixed unused variable
         setMessage(null);
         setError(null);
 
@@ -25,10 +23,10 @@ function Trade() {
 
         try {
             if (type === "buy") {
-                await buyCrypto(crypto, parseFloat(amount)); // Fixed unused variable
+                await buyCrypto(crypto, parseFloat(amount));
                 setMessage(`Successfully bought ${amount} ${crypto}.`);
             } else if (type === "sell") {
-                await sellCrypto(crypto, parseFloat(amount)); // Fixed unused variable
+                await sellCrypto(crypto, parseFloat(amount));
                 setMessage(`Successfully sold ${amount} ${crypto}.`);
             }
         } catch (err) {
