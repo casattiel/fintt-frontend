@@ -24,6 +24,17 @@ export const login = async (email, password) => {
   }
 };
 
+// Fetch Market Data
+export const fetchMarketData = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/market`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch market data:", error);
+    throw error.response.data;
+  }
+};
+
 // Check Subscription
 export const checkSubscription = async () => {
   try {
@@ -31,17 +42,6 @@ export const checkSubscription = async () => {
     return response.data;
   } catch (error) {
     console.error("Subscription check failed:", error);
-    throw error.response.data;
-  }
-};
-
-// Fetch Market Data
-export const getMarketData = async () => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/market`);
-    return response.data;
-  } catch (error) {
-    console.error("Failed to fetch market data:", error);
     throw error.response.data;
   }
 };
