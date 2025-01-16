@@ -24,6 +24,17 @@ export const login = async (email, password) => {
   }
 };
 
+// Check Subscription
+export const checkSubscription = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/subscription`, getAuthHeaders());
+    return response.data;
+  } catch (error) {
+    console.error("Subscription check failed:", error);
+    throw error.response.data;
+  }
+};
+
 // Fetch Market Data
 export const getMarketData = async () => {
   try {
