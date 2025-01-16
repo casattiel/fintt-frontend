@@ -16,10 +16,10 @@ function Subscription() {
         }
 
         try {
-            const response = await subscribe(selectedPlan);
+            await subscribe(selectedPlan); // Fixed unused variable
             setMessage(`Successfully subscribed to the ${selectedPlan} plan.`);
         } catch (err) {
-            setError(err.message || "An error occurred while subscribing.");
+            setError(err.response?.data?.detail || "An error occurred while subscribing.");
         }
     };
 

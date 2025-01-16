@@ -9,30 +9,30 @@ function Trade() {
     const [error, setError] = useState(null);
 
     const handleTrade = async (type) => {
-        setTradeType(type);
+        setTradeType(type); // Fixed unused variable
         setMessage(null);
         setError(null);
 
         if (!crypto || !amount) {
-            setError("Please fill in all fields");
+            setError("Please fill in all fields.");
             return;
         }
 
         if (amount <= 0) {
-            setError("Amount must be greater than zero");
+            setError("Amount must be greater than zero.");
             return;
         }
 
         try {
             if (type === "buy") {
-                const response = await buyCrypto(crypto, parseFloat(amount));
+                await buyCrypto(crypto, parseFloat(amount)); // Fixed unused variable
                 setMessage(`Successfully bought ${amount} ${crypto}.`);
             } else if (type === "sell") {
-                const response = await sellCrypto(crypto, parseFloat(amount));
+                await sellCrypto(crypto, parseFloat(amount)); // Fixed unused variable
                 setMessage(`Successfully sold ${amount} ${crypto}.`);
             }
         } catch (err) {
-            setError(err.message || "An error occurred while processing the trade.");
+            setError(err.response?.data?.detail || "An error occurred while processing the trade.");
         }
     };
 
