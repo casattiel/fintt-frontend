@@ -1,53 +1,59 @@
 import React, { useEffect, useState } from "react";
-import { getMarketData } from "../api";
+import { fetchMarketData } from "../api";
 
-const Market = () => {
-  const [marketData, setMarketData] = useState([]);
-  const [loading, setLoading] = useState(true);
+function Market() {
+    const [marketData, setMarketData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getMarketData();
-        setMarketData(data);
-      } catch (error) {
-        console.error("Error fetching market data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+    useEffect(() => {
+        async function getMarketData() {
+            try {
+                const data = await fetchMarketData();
+                setMarketData(data);
+                setLoading(false);
+            } catch (err) {
+                setError("Failed to fetch market data. Please try again.");
+                setLoading(false);
+            }
+        }
 
-  if (loading) {
-    return <p className="text-center text-lg mt-10">Loading market data...</p>;
-  }
+        getMarketData();
+    }, []);
 
-  return (
-    <div className="container mx-auto p-8">
-      <h2 className="text-2xl font-bold text-blue-600 mb-4">Market</h2>
-      <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow">
-        <thead>
-          <tr>
-            <th className="px-4 py-2 text-left text-gray-600">Crypto</th>
-            <th className="px-4 py-2 text-left text-gray-600">Last Price</th>
-            <th className="px-4 py-2 text-left text-gray-600">Bid</th>
-            <th className="px-4 py-2 text-left text-gray-600">Ask</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(marketData).map(([crypto, info], index) => (
-            <tr key={index} className="hover:bg-gray-100">
-              <td className="px-4 py-2 border-t">{crypto}</td>
-              <td className="px-4 py-2 border-t">${info.last_trade}</td>
-              <td className="px-4 py-2 border-t">${info.bid}</td>
-              <td className="px-4 py-2 border-t">${info.ask}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
+    if (loading) {
+        return <div>Loading market data...</div>;
+    }
+
+    if (error) {
+        return <div className="error">{error}</div>;
+    }
+
+    return (
+        <div className="market-page">
+            <h1>Market Prices</h1>
+            <table className="market-table">
+                <thead>
+                    <tr>
+                        <th>Cryptocurrency</th>
+                        <th>Last Price (USD)</th>
+                        <th>Bid (USD)</th>
+                        <th>Ask (USD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {marketData.map((crypto, index) => (
+                        <tr key={index}>
+                            <td>{crypto.crypto}</td>
+                            <td>{parseFloat(crypto.last_price).toFixed(2)}</td>
+                            <td>{parseFloat(crypto.bid).toFixed(2)}</td>
+                            <td>{parseFloat(crypto.ask).toFixed(2)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
 
 export default Market;

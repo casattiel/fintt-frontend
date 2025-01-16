@@ -1,0 +1,32 @@
+.notifications-page {
+    padding: 20px;
+    text-align: center;
+}
+
+.notifications-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 20px auto;
+    width: 50%;
+    text-align: left;
+}
+
+.notification-item {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-item:hover {
+    background-color: #f0f0f0;
+}
+
+.notification-date {
+    font-size: 12px;
+    color: #888;
+}

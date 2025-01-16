@@ -1,0 +1,34 @@
+.dashboard-page {
+    padding: 20px;
+    text-align: center;
+}
+
+.dashboard-section {
+    margin: 20px 0;
+}
+
+.wallet-table, .market-table {
+    margin: 0 auto;
+    width: 80%;
+    border-collapse: collapse;
+}
+
+.wallet-table th, .market-table th, .wallet-table td, .market-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+.wallet-table th, .market-table th {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+.wallet-table tr:nth-child(even), .market-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.wallet-table tr:hover, .market-table tr:hover {
+    background-color: #ddd;
+}

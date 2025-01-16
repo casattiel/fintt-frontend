@@ -1,0 +1,30 @@
+.wallet-page {
+    padding: 20px;
+    text-align: center;
+}
+
+.wallet-table {
+    margin: 0 auto;
+    width: 60%;
+    border-collapse: collapse;
+}
+
+.wallet-table th, .wallet-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+.wallet-table th {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+.wallet-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.wallet-table tr:hover {
+    background-color: #ddd;
+}

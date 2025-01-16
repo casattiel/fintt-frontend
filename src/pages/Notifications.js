@@ -1,39 +1,69 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 function Notifications() {
-  const [notifications, setNotifications] = useState([]);
+    const [notifications, setNotifications] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // Establish WebSocket connection
-    const socket = new WebSocket(`${process.env.REACT_APP_BACKEND_URL.replace("http", "ws")}/notifications`);
+    useEffect(() => {
+        async function fetchNotifications() {
+            setLoading(true);
+            setError(null);
 
-    // On receiving a new message, add it to the notifications array
-    socket.onmessage = (event) => {
-      setNotifications((prev) => [...prev, event.data]);
-    };
+            try {
+                const token = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).token : null;
+                if (!token) {
+                    throw new Error("Unauthorized: Please log in to view your notifications.");
+                }
 
-    // Cleanup function to close the WebSocket connection when the component unmounts
-    return () => {
-      socket.close();
-    };
-  }, []);
+                const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/notifications`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
 
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Notifications</h1>
-      {notifications.length > 0 ? (
-        <ul className="list-disc pl-5">
-          {notifications.map((note, index) => (
-            <li key={index} className="mb-2 text-gray-700">
-              {note}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-gray-500">No notifications yet.</p>
-      )}
-    </div>
-  );
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || "Failed to fetch notifications.");
+                }
+
+                const data = await response.json();
+                setNotifications(data.notifications || []);
+            } catch (err) {
+                setError(err.message || "An error occurred while fetching notifications.");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchNotifications();
+    }, []);
+
+    if (loading) {
+        return <div>Loading notifications...</div>;
+    }
+
+    if (error) {
+        return <div className="error">{error}</div>;
+    }
+
+    return (
+        <div className="notifications-page">
+            <h1>Your Notifications</h1>
+            {notifications.length === 0 ? (
+                <p>No new notifications</p>
+            ) : (
+                <ul className="notifications-list">
+                    {notifications.map((notification, index) => (
+                        <li key={index} className="notification-item">
+                            <p>{notification.message}</p>
+                            <span className="notification-date">{new Date(notification.date).toLocaleString()}</span>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
 }
 
 export default Notifications;

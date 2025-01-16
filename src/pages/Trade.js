@@ -1,60 +1,83 @@
 import React, { useState } from "react";
 import { buyCrypto, sellCrypto } from "../api";
 
-const Trade = () => {
-  const [crypto, setCrypto] = useState("");
-  const [amount, setAmount] = useState("");
-  const [message, setMessage] = useState("");
+function Trade() {
+    const [crypto, setCrypto] = useState("");
+    const [amount, setAmount] = useState("");
+    const [tradeType, setTradeType] = useState(""); // "buy" or "sell"
+    const [message, setMessage] = useState(null);
+    const [error, setError] = useState(null);
 
-  const handleTrade = async (type) => {
-    const token = localStorage.getItem("token");
-    try {
-      const response =
-        type === "buy"
-          ? await buyCrypto(token, crypto, amount)
-          : await sellCrypto(token, crypto, amount);
-      setMessage(response.message);
-    } catch (error) {
-      setMessage("Error processing the trade. Please try again.");
-    }
-  };
+    const handleTrade = async (type) => {
+        setTradeType(type);
+        setMessage(null);
+        setError(null);
 
-  return (
-    <div className="container mx-auto p-8">
-      <h2 className="text-2xl font-bold text-blue-600 mb-4">Trade Cryptocurrency</h2>
-      <div className="flex flex-col space-y-4">
-        <input
-          type="text"
-          placeholder="Crypto (e.g., BTC)"
-          value={crypto}
-          onChange={(e) => setCrypto(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-        />
-        <input
-          type="number"
-          placeholder="Amount"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-        />
-        <div className="flex space-x-4">
-          <button
-            onClick={() => handleTrade("buy")}
-            className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
-          >
-            Buy
-          </button>
-          <button
-            onClick={() => handleTrade("sell")}
-            className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600"
-          >
-            Sell
-          </button>
+        if (!crypto || !amount) {
+            setError("Please fill in all fields");
+            return;
+        }
+
+        if (amount <= 0) {
+            setError("Amount must be greater than zero");
+            return;
+        }
+
+        try {
+            if (type === "buy") {
+                const response = await buyCrypto(crypto, parseFloat(amount));
+                setMessage(`Successfully bought ${amount} ${crypto}.`);
+            } else if (type === "sell") {
+                const response = await sellCrypto(crypto, parseFloat(amount));
+                setMessage(`Successfully sold ${amount} ${crypto}.`);
+            }
+        } catch (err) {
+            setError(err.message || "An error occurred while processing the trade.");
+        }
+    };
+
+    return (
+        <div className="trade-page">
+            <h1>Trade Cryptocurrency</h1>
+            <div className="trade-form">
+                <label>
+                    Cryptocurrency Symbol (e.g., BTC, ETH):
+                    <input
+                        type="text"
+                        value={crypto}
+                        onChange={(e) => setCrypto(e.target.value.toUpperCase())}
+                        placeholder="Enter symbol (e.g., BTC)"
+                    />
+                </label>
+                <label>
+                    Amount:
+                    <input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="Enter amount"
+                    />
+                </label>
+                <div className="trade-buttons">
+                    <button
+                        className="buy-button"
+                        onClick={() => handleTrade("buy")}
+                    >
+                        Buy
+                    </button>
+                    <button
+                        className="sell-button"
+                        onClick={() => handleTrade("sell")}
+                    >
+                        Sell
+                    </button>
+                </div>
+            </div>
+
+            {message && <div className="trade-success">{message}</div>}
+            {error && <div className="trade-error">{error}</div>}
         </div>
-        {message && <p className="text-center text-lg mt-4">{message}</p>}
-      </div>
-    </div>
-  );
-};
+    );
+}
 
 export default Trade;

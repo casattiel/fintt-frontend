@@ -1,60 +1,54 @@
-import React, { useState } from "react";
-import { buyCrypto, sellCrypto } from "../api";
+import React from "react";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import Market from "./pages/Market";
+import Trade from "./pages/Trade";
+import Subscription from "./pages/Subscription";
+import Wallet from "./pages/Wallet";
+import Login from "./pages/Login";
+import { checkSubscription } from "./api";
 
-const Trade = () => {
-  const [crypto, setCrypto] = useState("");
-  const [amount, setAmount] = useState("");
-  const [message, setMessage] = useState("");
+function ProtectedRoute({ children }) {
+    const isLoggedIn = localStorage.getItem("user"); // Replace with actual auth logic
+    const [isSubscribed, setIsSubscribed] = React.useState(false);
 
-  const handleTrade = async (type) => {
-    const token = localStorage.getItem("token");
-    try {
-      const response =
-        type === "buy"
-          ? await buyCrypto(token, crypto, amount)
-          : await sellCrypto(token, crypto, amount);
-      setMessage(response.message);
-    } catch (error) {
-      setMessage("Error processing the trade. Please try again.");
+    React.useEffect(() => {
+        async function verifySubscription() {
+            try {
+                const active = await checkSubscription();
+                setIsSubscribed(active);
+            } catch {
+                setIsSubscribed(false);
+            }
+        }
+        verifySubscription();
+    }, []);
+
+    if (!isLoggedIn) {
+        return <Navigate to="/login" />;
     }
-  };
 
-  return (
-    <div className="container mx-auto p-8">
-      <h2 className="text-2xl font-bold text-blue-600 mb-4">Trade Cryptocurrency</h2>
-      <div className="flex flex-col space-y-4">
-        <input
-          type="text"
-          placeholder="Crypto (e.g., BTC)"
-          value={crypto}
-          onChange={(e) => setCrypto(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-        />
-        <input
-          type="number"
-          placeholder="Amount"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-        />
-        <div className="flex space-x-4">
-          <button
-            onClick={() => handleTrade("buy")}
-            className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
-          >
-            Buy
-          </button>
-          <button
-            onClick={() => handleTrade("sell")}
-            className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600"
-          >
-            Sell
-          </button>
-        </div>
-        {message && <p className="text-center text-lg mt-4">{message}</p>}
-      </div>
-    </div>
-  );
-};
+    if (!isSubscribed) {
+        return <Navigate to="/subscription" />;
+    }
 
-export default Trade;
+    return children;
+}
+
+function App() {
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/market" element={<ProtectedRoute><Market /></ProtectedRoute>} />
+                <Route path="/trade" element={<ProtectedRoute><Trade /></ProtectedRoute>} />
+                <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+                <Route path="/subscription" element={<Subscription />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="*" element={<h1>404 - Not Found</h1>} />
+            </Routes>
+        </Router>
+    );
+}
+
+export default App;
