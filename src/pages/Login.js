@@ -1,71 +1,72 @@
 import React, { useState } from "react";
-import { login } from "../api";
 import { useNavigate } from "react-router-dom";
+import { login } from "../api";
 
 function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogin = async () => {
+    const handleLogin = async (e) => {
+        e.preventDefault();
         setError(null);
-        setLoading(true);
+
+        if (!email || !password) {
+            setError("Please fill in all fields.");
+            return;
+        }
+
         try {
-            const response = await login(email, password);
-            console.log("Login successful:", response);
-
-            // Save user info to local storage (if needed)
-            localStorage.setItem("token", response.token);
-            localStorage.setItem("user", JSON.stringify(response.user));
-
-            // Redirect to dashboard
-            navigate("/dashboard");
+            await login(email, password);
+            navigate("/dashboard"); // Redirect to dashboard after login
         } catch (err) {
-            setError(err.message || "Invalid email or password. Please try again.");
-        } finally {
-            setLoading(false);
+            setError(err.message || "Login failed. Please try again.");
         }
     };
 
     return (
-        <div className="login-page">
-            <h1>Login to FINTT</h1>
-            <div className="login-form">
-                <label>
-                    Email Address:
-                    <input
-                        type="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </label>
-                <label>
-                    Password:
-                    <input
-                        type="password"
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </label>
-                <button
-                    className="login-button"
-                    onClick={handleLogin}
-                    disabled={loading}
-                >
-                    {loading ? "Logging in..." : "Login"}
-                </button>
-                {error && <div className="error">{error}</div>}
+        <div className="auth-container">
+            <div className="auth-card">
+                <h1>Login to FINTT</h1>
+                <form onSubmit={handleLogin}>
+                    <div className="form-group">
+                        <label>Email Address</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter your email"
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter your password"
+                            required
+                        />
+                    </div>
+                    {error && <div className="error-message">{error}</div>}
+                    <button type="submit" className="auth-button">
+                        Login
+                    </button>
+                </form>
+                <div className="auth-footer">
+                    <p>
+                        Don't have an account?{" "}
+                        <span
+                            className="auth-link"
+                            onClick={() => navigate("/register")}
+                        >
+                            Register here
+                        </span>
+                    </p>
+                </div>
             </div>
-            <p>
-                Don't have an account?{" "}
-                <a href="/register" className="link">
-                    Register here
-                </a>
-            </p>
         </div>
     );
 }

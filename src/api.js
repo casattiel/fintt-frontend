@@ -25,7 +25,9 @@ apiClient.interceptors.request.use((config) => {
 // Login API
 export const login = async (email, password) => {
     try {
-        const response = await apiClient.post("/login", { email, password });
+        const response = await apiClient.post("/auth/login", { email, password });
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
         return response.data; // Returns token and user info
     } catch (err) {
         throw new Error(err.response?.data?.detail || "Login failed.");
@@ -33,9 +35,9 @@ export const login = async (email, password) => {
 };
 
 // Register API
-export const register = async (email, password) => {
+export const register = async (email, password, name) => {
     try {
-        const response = await apiClient.post("/register", { email, password });
+        const response = await apiClient.post("/auth/register", { email, password, name });
         return response.data; // Returns success message
     } catch (err) {
         throw new Error(err.response?.data?.detail || "Registration failed.");
